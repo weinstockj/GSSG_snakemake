@@ -37,11 +37,22 @@ def make_annot_files(bed_for_annot, bimfile, annot_file):
     print('making annot file')
     df_bim = pd.read_csv(bimfile,
             delim_whitespace=True, usecols = [0,1,2,3], names = ['CHR','SNP','CM','BP'])
-    iter_bim = [['chr'+str(x1), x2, x2, 1] for (x1, x2) in np.array(df_bim[['CHR', 'BP']])]
+    print(df_bim.head())
+    iter_bim = [['chr'+str(x1), int(x2), int(x2), 1] for (x1, x2) in np.array(df_bim[['CHR', 'BP']])]
+    print("printing iter_bim[0]")
+    print(iter_bim[0])
     bimbed = BedTool(iter_bim)
     annotbed = bimbed.intersect(bed_for_annot, wb=True)
+    print("printing annotbed[0]")
+    print(annotbed[0])
     bp = [x.start for x in annotbed]
-    score = [float(x.fields[7]) for x in annotbed]
+
+    # if a score exists, will be in 7th column
+    if len(annotbed[0]) >= 7:
+        score = [float(x.fields[7]) for x in annotbed]
+    else:
+        score = [1.0 for x in annotbed]
+    
     df_int = pd.DataFrame({'BP': bp, 'ANNOT':score})
     df_annot = pd.merge(df_bim, df_int, how='left', on='BP')
     df_annot.fillna(0, inplace=True)

@@ -6,3 +6,9 @@ processed_data/Roadmap_per_gene_beds_Blood.rda
 processed_data/RoadmapLinks.tar.gz
 processed_data/AllPredictions.AvgHiC.ABC0.015.minus150.withcolnames.ForABCPaper.txt.gz
 processed_data/allgenes_s2g/*
+processed_data/
+*.log
+*.txt
+logs/
+bed/
+
