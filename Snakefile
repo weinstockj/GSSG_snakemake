@@ -17,7 +17,17 @@ local_bed_dir = "bed"
 PRICE_LAB_URL="https://storage.googleapis.com/broad-alkesgroup-public/LDSCORE/Dey_Enhancer_MasterReg/processed_data/*"
 PRICE_LAB_URL="gs://broad-alkesgroup-public/LDSCORE/Dey_Enhancer_MasterReg/processed_data"
 
-downstream_indegree_path = "/home/users/jweinstk/network_inference/analyze_experiments/scripts/map_ko_on_observed_genes/_targets/objects/downstream_indegree"
+downstream_indegree_path = "/oak/stanford/groups/pritch/users/jweinstk/perturbation_data/rnaseq_pipeline/scripts/_targets/objects/downstream_indegree_by_group"
+
+gene_group_prefix = {
+    "control" : "Control",
+    "IEI"     : "IEI Target",
+    "IL2RA"   : "IL2RA Regulators"
+}
+
+gene_groups = list(gene_group_prefix.keys())
+
+print("gene groups are: ", gene_groups)
 
 R_VERSION = "4.1.2"
 GCC_VERSION = "12.1.0"
@@ -54,7 +64,10 @@ BEDs = (
     "HOMOD_prob",
     "master_regulator",
     "PCHiC_binary",
-    "perturbation_indegree",
+    # "perturbation_indegree",
+    "perturbation_indegree_control",
+    "perturbation_indegree_IEI",
+    "perturbation_indegree_IL2RA",
     "pLI_genes2",
     "PPI_All",
     "PPI_control",
@@ -95,7 +108,7 @@ rule all:
     input:
         os.path.join(OAK_resource_dir, "resources.download.DONE"),
         os.path.join(local_resource_dir, "resources.download.DONE"),
-        os.path.join(local_geneset_dir, "perturbation_indegree.txt"),
+        expand(os.path.join(local_geneset_dir, "perturbation_indegree_{group}.txt"), group = gene_groups),
         expand(os.path.join(local_bed_dir, "{BED}.DONE"), BED = BEDs),
         #expand(os.path.join(local_bed_dir, "{BED}.DONE.ln"), BED = BEDs),
         expand(os.path.join(local_bed_dir, "{BED}.{S2G}.DONE.merged.sorted"), BED = BEDs, S2G = S2Gs),
@@ -103,7 +116,8 @@ rule all:
         expand(os.path.join(OAK_annot_dir, "annot.{S2G}.{BED}.DONE"), BED = BEDs, S2G = S2Gs),
         expand(os.path.join(OAK_annot_dir, "{BED}", "sorted.merged.{S2G}.{CHR}.annot.gz"), BED = BEDs, S2G = S2Gs, CHR = CHRs),
         expand(os.path.join(OAK_LDSC_dir, "{BED}", "{S2G}.{CHR}.l2.ldscore.gz"), BED = BEDs, S2G = S2Gs, CHR = CHRs),
-        expand(os.path.join(OAK_LDSC_dir, "{BED}", "{S2G}.{PHENO}.results"), BED = BEDs, S2G = S2Gs, PHENO = PHENOs)
+        expand(os.path.join(OAK_LDSC_dir, "{BED}", "{S2G}.{PHENO}.results"), BED = BEDs, S2G = S2Gs, PHENO = PHENOs),
+        "concatenated_ldscore_results.tsv"
 
 
 rule download_resources:
@@ -126,17 +140,20 @@ rule create_perturbation_geneset:
     input:
         downstream_indegree_path
     output:
-        os.path.join(local_geneset_dir, "perturbation_indegree.txt")
+        os.path.join(local_geneset_dir, "perturbation_indegree_{group}.txt")
+    params:
+        full_group_name = lambda wildcards: gene_group_prefix[wildcards.group]
     shell:
         """
         ml load R/{R_VERSION}
         ml load gcc/{GCC_VERSION}
-        Rscript code/calc_perturbation_scores/calc_perturbation_scores.R {input} {output}
+        Rscript code/calc_perturbation_scores/calc_perturbation_scores.R {input} {output} {params.full_group_name}
         """
 
 rule create_bedgraphs:
     input:
-        os.path.join(local_geneset_dir, "perturbation_indegree.txt")
+        #os.path.join(local_geneset_dir, "perturbation_indegree.txt")
+        expand(os.path.join(local_geneset_dir, "perturbation_indegree_{group}.txt"), group = gene_groups)
     output:
         os.path.join(local_bed_dir, "{BED}.DONE")
     log:
@@ -276,4 +293,16 @@ rule ldscore_reg:
             --print-delete-vals \
             --out {params.out_prefix}
 
+        """
+
+rule concat_ldscore:
+    input:
+        expand(os.path.join(OAK_LDSC_dir, "{BED}", "{S2G}.{PHENO}.results"), BED = BEDs, S2G = S2Gs, PHENO = PHENOs)
+    output:
+        "concatenated_ldscore_results.tsv"
+    shell:
+        """
+        ml load R/{R_VERSION}
+        ml load gcc/{GCC_VERSION}
+        Rscript concatenate_ldscores.R {input}
         """
