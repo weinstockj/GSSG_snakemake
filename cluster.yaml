@@ -1,0 +1,35 @@
+__default__:
+    time: "1-1"
+    cpus: 1
+    mem: "13G"
+    partition: "pritch"
+    name: "GSSG.{rule}.{wildcards}"
+    output: "logs/{rule}.{wildcards}.stdout"
+    error: "logs/{rule}.{wildcards}.stderr"
+
+create_bedgraphs:
+    time: "3-1"
+    cpus: 1
+    mem: "20G"
+    partition: "pritch"
+    name: "GSSG.{rule}.{wildcards}"
+    output: "logs/{rule}.{wildcards}.stdout"
+    error: "logs/{rule}.{wildcards}.stderr"
+
+create_ldscore:
+    time: "3-1"
+    cpus: 1
+    mem: "16G"
+    partition: "pritch"
+    name: "GSSG.{rule}.{wildcards}"
+    output: "logs/{rule}.{wildcards}.stdout"
+    error: "logs/{rule}.{wildcards}.stderr"
+
+ldscore_reg:
+    time: "300"
+    cpus: 1
+    mem: "6G"
+    partition: "pritch"
+    name: "GSSG.{rule}.{wildcards}"
+    output: "logs/{rule}.{wildcards}.stdout"
+    error: "logs/{rule}.{wildcards}.stderr"
