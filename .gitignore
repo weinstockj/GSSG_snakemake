@@ -11,4 +11,9 @@ processed_data/
 *.txt
 logs/
 bed/
-
+*.tsv
+*.pdf
+.snakemake/
+*.feather
+*.swp
+*.Rds
