@@ -49,5 +49,5 @@ enrichments = pmap_dfr(
 
 log_info(glue("Done reading in {length(args)} results files"))
 
-readr::write_tsv(enrichments, "concatenated_ldscore_results.tsv")
-write_tsv(enrichments, "concatenated_ldscore_results.feather")
+readr::write_tsv(enrichments, "concatenated_ldscore_results_modules_2023_05_18.tsv")
+arrow::write_feather(enrichments, "concatenated_ldscore_results_modules_2023_05_18.feather")
