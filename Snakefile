@@ -10,19 +10,29 @@ local_geneset_dir = "genesets"
 OAK_bed_dir = os.path.join(OAK, "GSSG_bed")
 OAK_annot_dir = os.path.join(OAK, "GSSG_annot")
 OAK_LDSC_dir = os.path.join(OAK, "GSSG_ldsc")
-OAK_sumstats_dir = os.path.join(OAK, "resources", "LDSC", "sumstats")
+#OAK_sumstats_dir = os.path.join(OAK, "resources", "LDSC", "sumstats")
+OAK_finngen_sumstats_dir = os.path.join(OAK, "resources", "finngen", "format_ldscore", "output")
+OAK_gwas_catalog_sumstats_dir = os.path.join(OAK, "resources", "GWAS_CATALOG", "output", "format_ldscore")
 local_bed_dir = "bed"
 
 #PRICE_LAB_URL="https://alkesgroup.broadinstitute.org/LDSCORE/Dey_Enhancer_MasterReg/processed_data"
 PRICE_LAB_URL="https://storage.googleapis.com/broad-alkesgroup-public/LDSCORE/Dey_Enhancer_MasterReg/processed_data/*"
 PRICE_LAB_URL="gs://broad-alkesgroup-public/LDSCORE/Dey_Enhancer_MasterReg/processed_data"
 
-downstream_indegree_path = "/oak/stanford/groups/pritch/users/jweinstk/perturbation_data/rnaseq_pipeline/scripts/_targets/objects/downstream_indegree_by_group"
+#downstream_indegree_path = "/oak/stanford/groups/pritch/users/jweinstk/perturbation_data/rnaseq_pipeline/scripts/_targets/objects/downstream_indegree_by_group"
+downstream_indegree_path = "/oak/stanford/groups/pritch/users/jweinstk/perturbation_data/rnaseq_pipeline/scripts/output/diffeq/txt/module_genes_including_downstream.tsv"
 
 gene_group_prefix = {
-    "control" : "Control",
-    "IEI"     : "IEI Target",
-    "IL2RA"   : "IL2RA Regulators"
+    "1A"  : "1A",
+    "1B"  : "1B",
+    "1C"  : "1C",
+    "2A"  : "2A",
+    "2B"  : "2B",
+    "2C"  : "2C",
+    "3A"  : "3A",
+    "3B"  : "3B",
+    "4A"  : "4A",
+    "0"  : "0"
 }
 
 gene_groups = list(gene_group_prefix.keys())
@@ -45,14 +55,32 @@ LDSC_RESOURCE_DIR=os.path.join(OAK, "resources", "LDSC")
 
 CHRs = range(1, 23)
 
-PHENOs = (
-    "PASS_Lupus",
-    "PASS_Rheumatoid_Arthritis",
-    "PASS_Type_1_Diabetes",
-    "PASS_Ulcerative_Colitis",
-    "UKB_460K_disease_AID_SURE",
-    "UKB_460K_disease_PSORIASIS"
-)
+#PHENOs = (
+#    "PASS_Lupus",
+#    "PASS_Rheumatoid_Arthritis",
+#    "PASS_Type_1_Diabetes",
+#    "PASS_Ulcerative_Colitis",
+#    "UKB_460K_disease_AID_SURE",
+#    "UKB_460K_disease_PSORIASIS"
+#)
+
+
+SUMSTATS_DIR = {
+    "finngen_R8_AUTOIMMUNE" : OAK_finngen_sumstats_dir,
+    "finngen_R8_CHRONNAS" : OAK_finngen_sumstats_dir,
+    "finngen_R8_G6_MS" : OAK_finngen_sumstats_dir,
+    "finngen_R8_J10_ASTHMA_EXMORE" : OAK_finngen_sumstats_dir,
+    "finngen_R8_K11_UC_STRICT2" : OAK_finngen_sumstats_dir,
+    "finngen_R8_L12_DERMATITISECZEMA" : OAK_finngen_sumstats_dir,
+    "finngen_R8_L12_LUPUS" : OAK_finngen_sumstats_dir,
+    "finngen_R8_L12_PSORIASIS" : OAK_finngen_sumstats_dir,
+    #"finngen_R8_RHEUMA_NOS" : OAK_finngen_sumstats_dir,
+    "finngen_R8_T1D_WIDE" : OAK_finngen_sumstats_dir,
+    "RA" : OAK_gwas_catalog_sumstats_dir
+    #"LUPUS" : OAK_gwas_catalog_sumstats_dir
+}
+
+PHENOs = list(SUMSTATS_DIR.keys())
 
 BEDs = (
     "ABC9_G_top10_0_015",
@@ -65,9 +93,19 @@ BEDs = (
     "master_regulator",
     "PCHiC_binary",
     # "perturbation_indegree",
-    "perturbation_indegree_control",
-    "perturbation_indegree_IEI",
-    "perturbation_indegree_IL2RA",
+    # "perturbation_indegree_control",
+    # "perturbation_indegree_IEI",
+    # "perturbation_indegree_IL2RA",
+    "perturbation_indegree_1A",
+    "perturbation_indegree_1B",
+    "perturbation_indegree_1C",
+    "perturbation_indegree_2A",
+    "perturbation_indegree_2B",
+    "perturbation_indegree_2C",
+    "perturbation_indegree_3A",
+    "perturbation_indegree_3B",
+    "perturbation_indegree_4A",
+    "perturbation_indegree_0",
     "pLI_genes2",
     "PPI_All",
     "PPI_control",
@@ -101,8 +139,8 @@ if not os.path.isdir(local_bed_dir):
 if not os.path.isdir(hapmap):
     IOError(f"{hapmap} does not exist")
 
-if not os.path.isdir(OAK_sumstats_dir):
-    IOError(f"{OAK_sumstats_dir} does not exist")
+#if not os.path.isdir(OAK_sumstats_dir):
+#    IOError(f"{OAK_sumstats_dir} does not exist")
 
 rule all:
     input:
@@ -117,7 +155,8 @@ rule all:
         expand(os.path.join(OAK_annot_dir, "{BED}", "sorted.merged.{S2G}.{CHR}.annot.gz"), BED = BEDs, S2G = S2Gs, CHR = CHRs),
         expand(os.path.join(OAK_LDSC_dir, "{BED}", "{S2G}.{CHR}.l2.ldscore.gz"), BED = BEDs, S2G = S2Gs, CHR = CHRs),
         expand(os.path.join(OAK_LDSC_dir, "{BED}", "{S2G}.{PHENO}.results"), BED = BEDs, S2G = S2Gs, PHENO = PHENOs),
-        "concatenated_ldscore_results.tsv"
+        #"concatenated_ldscore_results.tsv"
+        "concatenated_ldscore_results_modules_2023_05_18.tsv"
 
 
 rule download_resources:
@@ -141,13 +180,16 @@ rule create_perturbation_geneset:
         downstream_indegree_path
     output:
         os.path.join(local_geneset_dir, "perturbation_indegree_{group}.txt")
+    log:
+        stderr = os.path.abspath(os.path.join(log_dir, "create_perturbation_geneset.{group}.stderr.log")),
+        stdout = os.path.abspath(os.path.join(log_dir, "create_perturbation_geneset.{group}.stdout.log"))
     params:
         full_group_name = lambda wildcards: gene_group_prefix[wildcards.group]
     shell:
         """
         ml load R/{R_VERSION}
         ml load gcc/{GCC_VERSION}
-        Rscript code/calc_perturbation_scores/calc_perturbation_scores.R {input} {output} {params.full_group_name}
+        Rscript code/calc_perturbation_scores/calc_perturbation_scores.R {input} {output} {params.full_group_name} 1>{log.stdout} 2>{log.stderr}
         """
 
 rule create_bedgraphs:
@@ -260,7 +302,8 @@ rule ldscore_reg:
     input:
         annot = expand(os.path.join(OAK_annot_dir, "{{BED}}", "sorted.merged.{S2G}.{CHR}.annot.gz"), CHR = CHRs, S2G = S2Gs),
         ldscore = expand(os.path.join(OAK_LDSC_dir, "{{BED}}", "{S2G}.{CHR}.l2.ldscore.gz"), CHR = CHRs, S2G = S2Gs),
-        PHENO = os.path.join(OAK_sumstats_dir, "{PHENO}.sumstats") 
+        #PHENO = os.path.join(OAK_sumstats_dir, "{PHENO}.sumstats.gz")
+        PHENO = lambda wildcards: os.path.join(SUMSTATS_DIR[wildcards.PHENO], f"{wildcards.PHENO}.sumstats.gz")
     output:
         os.path.join(OAK_LDSC_dir, "{BED}", "{S2G}.{PHENO}.results")
     params:
@@ -299,7 +342,7 @@ rule concat_ldscore:
     input:
         expand(os.path.join(OAK_LDSC_dir, "{BED}", "{S2G}.{PHENO}.results"), BED = BEDs, S2G = S2Gs, PHENO = PHENOs)
     output:
-        "concatenated_ldscore_results.tsv"
+        "concatenated_ldscore_results_modules_2023_05_18.tsv"
     shell:
         """
         ml load R/{R_VERSION}
